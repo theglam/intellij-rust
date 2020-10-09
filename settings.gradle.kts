@@ -5,6 +5,7 @@ include(
     "common",
     "idea",
     "clion",
+    "rider",
     "debugger",
     "toml",
     "copyright",

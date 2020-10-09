@@ -28,6 +28,7 @@ val platformVersion = prop("platformVersion").toInt()
 val baseIDE = prop("baseIDE")
 val ideaVersion = prop("ideaVersion")
 val clionVersion = prop("clionVersion")
+val riderVersion = prop("riderVersion")
 val baseVersion = when (baseIDE) {
     "idea" -> ideaVersion
     "clion" -> clionVersion
@@ -189,6 +190,7 @@ project(":plugin") {
     version = "$majorVersion.$patchVersion.${prop("buildNumber")}$versionSuffix"
     intellij {
         pluginName = "intellij-rust"
+//        alternativeIdePath = "~/Library/Application Support/JetBrains/Toolbox/apps/Rider/ch-0/202.7660.16"
         val plugins = mutableListOf(
             project(":intellij-toml"),
             intelliLangPlugin,
@@ -214,6 +216,7 @@ project(":plugin") {
         implementation(project(":"))
         implementation(project(":idea"))
         implementation(project(":clion"))
+        implementation(project(":rider"))
         implementation(project(":debugger"))
         implementation(project(":toml"))
         implementation(project(":copyright"))
@@ -345,6 +348,20 @@ project(":clion") {
     intellij {
         version = clionVersion
         setPlugins(*clionPlugins.toTypedArray())
+    }
+    dependencies {
+        implementation(project(":"))
+        implementation(project(":common"))
+        implementation(project(":debugger"))
+        testImplementation(project(":", "testOutput"))
+        testImplementation(project(":common", "testOutput"))
+    }
+}
+
+project(":rider") {
+    intellij {
+        version = ideaVersion
+        setPlugins(nativeDebugPlugin)
     }
     dependencies {
         implementation(project(":"))

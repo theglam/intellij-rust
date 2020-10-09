@@ -20,6 +20,7 @@
 
     <depends optional="true" config-file="idea-only.xml">com.intellij.modules.java</depends>
     <depends optional="true" config-file="clion-only.xml">com.intellij.modules.clion</depends>
+    <depends optional="true" config-file="rider-only.xml">com.intellij.modules.rider</depends>
     <depends optional="true" config-file="debugger-only.xml">com.intellij.modules.appcode</depends>
     <depends optional="true" config-file="native-debug-only.xml">com.intellij.nativeDebug</depends>
     <depends optional="true" config-file="toml-only.xml">org.toml.lang</depends>
