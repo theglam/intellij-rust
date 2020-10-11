@@ -32,6 +32,7 @@ val riderVersion = prop("riderVersion")
 val baseVersion = when (baseIDE) {
     "idea" -> ideaVersion
     "clion" -> clionVersion
+    "rider" -> riderVersion
     else -> error("Unexpected IDE name: `$baseIDE`")
 }
 
@@ -360,8 +361,8 @@ project(":clion") {
 
 project(":rider") {
     intellij {
-        version = ideaVersion
-        setPlugins(nativeDebugPlugin)
+        version = riderVersion
+//        setPlugins("rider-cpp")
     }
     dependencies {
         implementation(project(":"))
