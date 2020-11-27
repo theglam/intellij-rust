@@ -1,6 +1,7 @@
 from sys import version_info
 
 import gdb
+from gdb import Value, TYPE_CODE_PTR
 
 if version_info[0] >= 3:
     xrange = range
@@ -10,13 +11,15 @@ FIRST_FIELD = "__1"
 
 
 def unwrap_unique_or_non_null(unique_or_nonnull):
+    # type: (Value) -> Value
     # BACKCOMPAT: rust 1.32 https://github.com/rust-lang/rust/commit/7a0911528058e87d22ea305695f4047572c5e067
     ptr = unique_or_nonnull["pointer"]
-    return ptr if ptr.type.code == gdb.TYPE_CODE_PTR else ptr[ZERO_FIELD]
+    return ptr if ptr.type.code == TYPE_CODE_PTR else ptr[ZERO_FIELD]
 
 
 class StructProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StructProvider
         self.valobj = valobj
         self.fields = self.valobj.type.fields()
 
@@ -30,6 +33,7 @@ class StructProvider:
 
 class TupleProvider:
     def __init__(self, valobj):
+        # type: (Value) -> TupleProvider
         self.valobj = valobj
         self.fields = self.valobj.type.fields()
 
@@ -47,6 +51,7 @@ class TupleProvider:
 
 class EnumProvider:
     def __init__(self, valobj):
+        # type: (Value) -> EnumProvider
         content = valobj[valobj.type.fields()[0]]
         fields = content.type.fields()
         self.empty = len(fields) == 0
@@ -71,6 +76,7 @@ class EnumProvider:
 
 class StdStringProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdStringProvider
         self.valobj = valobj
         vec = valobj["vec"]
         self.length = int(vec["len"])
@@ -86,6 +92,7 @@ class StdStringProvider:
 
 class StdOsStringProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdOsStringProvider
         self.valobj = valobj
         buf = self.valobj["inner"]["inner"]
         is_windows = "Wtf8Buf" in buf.type.name
@@ -103,6 +110,7 @@ class StdOsStringProvider:
 
 class StdStrProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdStrProvider
         self.valobj = valobj
         self.length = int(valobj["length"])
         self.data_ptr = valobj["data_ptr"]
@@ -117,6 +125,7 @@ class StdStrProvider:
 
 class StdVecProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdVecProvider
         self.valobj = valobj
         self.length = int(valobj["len"])
         self.data_ptr = unwrap_unique_or_non_null(valobj["buf"]["ptr"])
@@ -135,6 +144,7 @@ class StdVecProvider:
 
 class StdVecDequeProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdVecDequeProvider
         self.valobj = valobj
         self.head = int(valobj["head"])
         self.tail = int(valobj["tail"])
@@ -159,6 +169,7 @@ class StdVecDequeProvider:
 
 class StdRcProvider:
     def __init__(self, valobj, is_atomic=False):
+        # type: (Value, bool) -> StdRcProvider
         self.valobj = valobj
         self.ptr = unwrap_unique_or_non_null(valobj["ptr"])
         self.value = self.ptr["data" if is_atomic else "value"]
@@ -184,6 +195,7 @@ class StdCellProvider:
 
 class StdRefProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdRefProvider
         self.value = valobj["value"].dereference()
         self.borrow = valobj["borrow"]["borrow"]["value"]["value"]
 
@@ -198,6 +210,7 @@ class StdRefProvider:
 
 class StdRefCellProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdRefCellProvider
         self.value = valobj["value"]["value"]
         self.borrow = valobj["borrow"]["value"]["value"]
 
@@ -212,6 +225,7 @@ class StdRefCellProvider:
 
 class StdNonZeroNumberProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdNonZeroNumberProvider
         fields = valobj.type.fields()
         assert len(fields) == 1
         field = list(fields)[0]
@@ -225,6 +239,7 @@ class StdNonZeroNumberProvider:
 # In particular, yields each key/value pair in the node and in any child nodes.
 def children_of_node(boxed_node, height):
     def cast_to_internal(node):
+        # type: (Value) -> Value
         internal_type_name = node.type.target().name.replace("LeafNode", "InternalNode", 1)
         internal_type = gdb.lookup_type(internal_type_name)
         return node.cast(internal_type.pointer())
@@ -262,6 +277,7 @@ def children_of_map(map):
 
 class StdBTreeSetProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdBTreeSetProvider
         self.valobj = valobj
 
     def to_string(self):
@@ -279,6 +295,7 @@ class StdBTreeSetProvider:
 
 class StdBTreeMapProvider:
     def __init__(self, valobj):
+        # type: (Value) -> StdBTreeMapProvider
         self.valobj = valobj
 
     def to_string(self):
@@ -297,6 +314,7 @@ class StdBTreeMapProvider:
 # BACKCOMPAT: rust 1.35
 class StdOldHashMapProvider:
     def __init__(self, valobj, show_values=True):
+        # type: (Value, bool) -> StdOldHashMapProvider
         self.valobj = valobj
         self.show_values = show_values
 
@@ -354,6 +372,7 @@ class StdOldHashMapProvider:
 
 class StdHashMapProvider:
     def __init__(self, valobj, show_values=True):
+        # type: (Value, bool) -> StdHashMapProvider
         self.valobj = valobj
         self.show_values = show_values
 

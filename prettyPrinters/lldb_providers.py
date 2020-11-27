@@ -1,6 +1,7 @@
 import sys
 
-from lldb import SBValue, SBData, SBError, eBasicTypeLong, eBasicTypeUnsignedLong, eBasicTypeUnsignedChar
+from lldb import SBValue, SBData, SBError, SBType
+from lldb import eBasicTypeLong, eBasicTypeUnsignedLong, eBasicTypeUnsignedChar
 from lldb.formatters import Logger
 
 #################################################################################################################
@@ -35,6 +36,8 @@ from lldb.formatters import Logger
 ################################################################################################################
 
 PY3 = sys.version_info[0] == 3
+if PY3:
+    from typing import Optional
 
 
 class ValueBuilder:
@@ -104,11 +107,11 @@ class EmptySyntheticProvider:
         return 0
 
     def get_child_index(self, name):
-        # type: (str) -> int
+        # type: (str) -> Optional[int]
         return None
 
     def get_child_at_index(self, index):
-        # type: (int) -> SBValue
+        # type: (int) -> Optional[SBValue]
         return None
 
     def update(self):
@@ -126,6 +129,7 @@ def SizeSummaryProvider(valobj, dict):
 
 
 def vec_to_string(vec):
+    # type: (SBValue) -> str
     length = vec.GetNumChildren()
     chars = [vec.GetChildAtIndex(i).GetValueAsUnsigned() for i in range(length)]
     return bytes(chars).decode(errors='replace') if PY3 else "".join(chr(char) for char in chars)
@@ -329,7 +333,7 @@ class StdVecDequeSyntheticProvider:
     def get_child_index(self, name):
         # type: (str) -> int
         index = name.lstrip('[').rstrip(']')
-        if index.isdigit() and self.tail <= index and (self.tail + index) % self.cap < self.head:
+        if index.isdigit() and self.tail <= int(index) and (self.tail + int(index)) % self.cap < self.head:
             return int(index)
         else:
             return -1
@@ -448,7 +452,7 @@ class StdOldHashMapSyntheticProvider:
 class StdHashMapSyntheticProvider:
     """Pretty-printer for hashbrown's HashMap"""
 
-    def __init__(self, valobj, dict, show_values=True):
+    def __init__(self, valobj, _dict, show_values=True):
         # type: (SBValue, dict, bool) -> StdHashMapSyntheticProvider
         self.valobj = valobj
         self.show_values = show_values
@@ -524,7 +528,7 @@ class StdHashMapSyntheticProvider:
         return True
 
 
-def StdRcSummaryProvider(valobj, dict):
+def StdRcSummaryProvider(valobj, _dict):
     # type: (SBValue, dict) -> str
     strong = valobj.GetChildMemberWithName("strong").GetValueAsUnsigned()
     weak = valobj.GetChildMemberWithName("weak").GetValueAsUnsigned()
@@ -547,7 +551,7 @@ class StdRcSyntheticProvider:
     struct AtomicUsize { v: UnsafeCell<usize> }
     """
 
-    def __init__(self, valobj, dict, is_atomic=False):
+    def __init__(self, valobj, _dict, is_atomic=False):
         # type: (SBValue, dict, bool) -> StdRcSyntheticProvider
         self.valobj = valobj
 
@@ -578,7 +582,7 @@ class StdRcSyntheticProvider:
         return -1
 
     def get_child_at_index(self, index):
-        # type: (int) -> SBValue
+        # type: (int) -> Optional[SBValue]
         if index == 0:
             return self.value
         if index == 1:
@@ -601,7 +605,7 @@ class StdRcSyntheticProvider:
 class StdCellSyntheticProvider:
     """Pretty-printer for std::cell::Cell"""
 
-    def __init__(self, valobj, dict):
+    def __init__(self, valobj, _dict):
         # type: (SBValue, dict) -> StdCellSyntheticProvider
         self.valobj = valobj
         self.value = valobj.GetChildMemberWithName("value").GetChildAtIndex(0)
@@ -617,7 +621,7 @@ class StdCellSyntheticProvider:
         return -1
 
     def get_child_at_index(self, index):
-        # type: (int) -> SBValue
+        # type: (int) -> Optional[SBValue]
         if index == 0:
             return self.value
         return None
@@ -631,7 +635,7 @@ class StdCellSyntheticProvider:
         return True
 
 
-def StdRefSummaryProvider(valobj, dict):
+def StdRefSummaryProvider(valobj, _dict):
     # type: (SBValue, dict) -> str
     borrow = valobj.GetChildMemberWithName("borrow").GetValueAsSigned()
     return "borrow={}".format(borrow) if borrow >= 0 else "borrow_mut={}".format(-borrow)
@@ -640,7 +644,7 @@ def StdRefSummaryProvider(valobj, dict):
 class StdRefSyntheticProvider:
     """Pretty-printer for std::cell::Ref, std::cell::RefMut, and std::cell::RefCell"""
 
-    def __init__(self, valobj, dict, is_cell=False):
+    def __init__(self, valobj, _dict, is_cell=False):
         # type: (SBValue, dict, bool) -> StdRefSyntheticProvider
         self.valobj = valobj
 
@@ -671,7 +675,7 @@ class StdRefSyntheticProvider:
         return -1
 
     def get_child_at_index(self, index):
-        # type: (int) -> SBValue
+        # type: (int) -> Optional[SBValue]
         if index == 0:
             return self.value
         if index == 1:
@@ -687,7 +691,7 @@ class StdRefSyntheticProvider:
         return True
 
 
-def StdNonZeroNumberSummaryProvider(valobj, dict):
+def StdNonZeroNumberSummaryProvider(valobj, _dict):
     # type: (SBValue, dict) -> str
     objtype = valobj.GetType()
     field = objtype.GetFieldAtIndex(0)

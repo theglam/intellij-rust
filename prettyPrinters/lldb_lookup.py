@@ -10,6 +10,7 @@ def is_hashbrown_hashmap(hash_map):
 
 
 def classify_rust_type(type):
+    # type: (SBType) -> RustType
     type_class = type.GetTypeClass()
     if type_class == lldb.eTypeClassStruct:
         return classify_struct(type.name, type.fields)
