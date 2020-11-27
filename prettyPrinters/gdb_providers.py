@@ -28,7 +28,7 @@ class StructProvider:
 
     def children(self):
         for field in self.fields:
-            yield (field.name, self.valobj[field.name])
+            yield field.name, self.valobj[field.name]
 
 
 class TupleProvider:
@@ -42,7 +42,7 @@ class TupleProvider:
 
     def children(self):
         for i, field in enumerate(self.fields):
-            yield ((str(i), self.valobj[field.name]))
+            yield str(i), self.valobj[field.name]
 
     @staticmethod
     def display_hint():
@@ -71,7 +71,7 @@ class EnumProvider:
 
     def children(self):
         if not self.empty:
-            yield (self.name, self.active_variant)
+            yield self.name, self.active_variant
 
 
 class StdStringProvider:
@@ -104,7 +104,8 @@ class StdOsStringProvider:
     def to_string(self):
         return self.data_ptr.lazy_string(encoding="utf-8", length=self.length)
 
-    def display_hint(self):
+    @staticmethod
+    def display_hint():
         return "string"
 
 
@@ -135,7 +136,7 @@ class StdVecProvider:
 
     def children(self):
         for index in xrange(self.length):
-            yield ("[{}]".format(index), (self.data_ptr + index).dereference())
+            yield "[{}]".format(index), (self.data_ptr + index).dereference()
 
     @staticmethod
     def display_hint():
@@ -160,7 +161,7 @@ class StdVecDequeProvider:
 
     def children(self):
         for index in xrange(0, self.size):
-            yield ("[{}]".format(index), (self.data_ptr + ((self.tail + index) % self.cap)).dereference())
+            yield "[{}]".format(index), (self.data_ptr + ((self.tail + index) % self.cap)).dereference()
 
     @staticmethod
     def display_hint():
@@ -180,9 +181,9 @@ class StdRcProvider:
         return "strong={}, weak={}".format(int(self.strong), int(self.weak))
 
     def children(self):
-        yield ("value", self.value)
-        yield ("strong", self.strong)
-        yield ("weak", self.weak)
+        yield "value", self.value
+        yield "strong", self.strong
+        yield "weak", self.weak
 
 
 class StdCellProvider:
@@ -190,7 +191,7 @@ class StdCellProvider:
         self.value = valobj["value"]["value"]
 
     def children(self):
-        yield ("value", self.value)
+        yield "value", self.value
 
 
 class StdRefProvider:
@@ -204,8 +205,8 @@ class StdRefProvider:
         return "borrow={}".format(borrow) if borrow >= 0 else "borrow_mut={}".format(-borrow)
 
     def children(self):
-        yield ("*value", self.value)
-        yield ("borrow", self.borrow)
+        yield "*value", self.value
+        yield "borrow", self.borrow
 
 
 class StdRefCellProvider:
@@ -219,8 +220,8 @@ class StdRefCellProvider:
         return "borrow={}".format(borrow) if borrow >= 0 else "borrow_mut={}".format(-borrow)
 
     def children(self):
-        yield ("value", self.value)
-        yield ("borrow", self.borrow)
+        yield "value", self.value
+        yield "borrow", self.borrow
 
 
 class StdNonZeroNumberProvider:
@@ -286,7 +287,7 @@ class StdBTreeSetProvider:
     def children(self):
         inner_map = self.valobj["map"]
         for i, (child, _) in enumerate(children_of_map(inner_map)):
-            yield ("[{}]".format(i), child)
+            yield "[{}]".format(i), child
 
     @staticmethod
     def display_hint():
@@ -303,8 +304,8 @@ class StdBTreeMapProvider:
 
     def children(self):
         for i, (key, val) in enumerate(children_of_map(self.valobj)):
-            yield ("key{}".format(i), key)
-            yield ("val{}".format(i), val)
+            yield "key{}".format(i), key
+            yield "val{}".format(i), val
 
     @staticmethod
     def display_hint():
@@ -361,10 +362,10 @@ class StdOldHashMapProvider:
             idx = table_index & self.capacity_mask
             element = (pairs_start + idx).dereference()
             if self.show_values:
-                yield ("key{}".format(index), element[ZERO_FIELD])
-                yield ("val{}".format(index), element[FIRST_FIELD])
+                yield "key{}".format(index), element[ZERO_FIELD]
+                yield "val{}".format(index), element[FIRST_FIELD]
             else:
-                yield ("[{}]".format(index), element[ZERO_FIELD])
+                yield "[{}]".format(index), element[ZERO_FIELD]
 
     def display_hint(self):
         return "map" if self.show_values else "array"
@@ -383,7 +384,7 @@ class StdHashMapProvider:
         self.size = int(table["items"])
         self.pair_type = table.type.template_argument(0).strip_typedefs()
 
-        self.new_layout = not table.type.has_key("data")
+        self.new_layout = "data" not in table.type
         if self.new_layout:
             self.data_ptr = ctrl.cast(self.pair_type.pointer())
         else:
@@ -421,10 +422,10 @@ class StdHashMapProvider:
                 idx = -(idx + 1)
             element = (pairs_start + idx).dereference()
             if self.show_values:
-                yield ("key{}".format(index), element[ZERO_FIELD])
-                yield ("val{}".format(index), element[FIRST_FIELD])
+                yield "key{}".format(index), element[ZERO_FIELD]
+                yield "val{}".format(index), element[FIRST_FIELD]
             else:
-                yield ("[{}]".format(index), element[ZERO_FIELD])
+                yield "[{}]".format(index), element[ZERO_FIELD]
 
     def display_hint(self):
         return "map" if self.show_values else "array"

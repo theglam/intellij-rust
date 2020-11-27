@@ -1,7 +1,8 @@
-import gdb
+from gdb import TYPE_CODE_STRUCT, TYPE_CODE_UNION
 
 from gdb_providers import *
 from rust_types import *
+
 
 def register_printers(objfile):
     objfile.pretty_printers.append(lookup)
@@ -14,9 +15,9 @@ def is_hashbrown_hashmap(hash_map):
 
 def classify_rust_type(type):
     type_class = type.code
-    if type_class == gdb.TYPE_CODE_STRUCT:
+    if type_class == TYPE_CODE_STRUCT:
         return classify_struct(type.tag, type.fields())
-    if type_class == gdb.TYPE_CODE_UNION:
+    if type_class == TYPE_CODE_UNION:
         return classify_union(type.fields())
 
     return RustType.OTHER
