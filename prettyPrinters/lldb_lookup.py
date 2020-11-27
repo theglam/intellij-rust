@@ -112,4 +112,4 @@ def synthetic_lookup(valobj, dict):
     if rust_type == RustType.STD_REF_CELL:
         return StdRefSyntheticProvider(valobj, dict, is_cell=True)
 
-    return DefaultSynthteticProvider(valobj, dict)
+    return DefaultSyntheticProvider(valobj, dict)
