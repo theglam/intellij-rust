@@ -1129,6 +1129,26 @@ class RsResolveTest : RsResolveTestBase() {
         ) {}
     """)
 
+    @MockRustcVersion("1.23.0-nightly")
+    fun `test in-band lifetime resolve in impl`() = checkByCode("""
+        #![feature(in_band_lifetimes)]
+        trait T<'a> {}
+        struct S<'a>(&'a str);
+        impl T<'a> 
+              //X 
+        for S<'a> {}
+             //^
+    """)
+
+    @MockRustcVersion("1.23.0-nightly")
+    fun `test in-band lifetime resolve in impl and explicit lifetimes`() = checkByCode("""
+        #![feature(in_band_lifetimes)]
+        trait T<'a> {}
+        struct S<'a>(&'a str);
+        impl <'b> T<'a> for S<'a> {}
+                             //^ unresolved
+    """)
+
     fun `test loop label`() = checkByCode("""
         fn foo() {
             'a: loop {
