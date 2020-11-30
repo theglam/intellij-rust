@@ -27,7 +27,6 @@ abstract class RsTool(toolName: String, val toolchain: RsToolchain) {
         workingDirectory: Path? = null
     ): GeneralCommandLine = GeneralCommandLine(executable)
         .withWorkDirectory(workingDirectory)
-        .apply { if (toolchain.name != null) withParameters("+${toolchain.name}") }
         .withParameters(parameters)
         .withCharset(Charsets.UTF_8)
         .also { toolchain.patchCommandLine(it) }

@@ -63,9 +63,7 @@ class RsCoverageRunner : CoverageRunner() {
             }
 
             val projectData = ProjectData()
-            val report = readLcov(dataFile, coverageSuite.contextFilePath) {
-                coverageSuite.toolchain?.toLocalPath(it) ?: it
-            }
+            val report = readLcov(dataFile, coverageSuite.contextFilePath)
             for ((filePath, lineHitsList) in report.records) {
                 val classData = projectData.getOrCreateClassData(filePath)
                 val max = lineHitsList.lastOrNull()?.lineNumber ?: 0

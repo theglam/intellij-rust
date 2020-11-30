@@ -57,6 +57,7 @@ interface RustProjectSettingsService {
             get() {
                 val oldToolchainHomeDirectory = toolchainHomeDirectory
                 if (sdkKey == null && oldToolchainHomeDirectory != null) {
+                    // TODO: Calling invokeAndWait from read-action leads to possible deadlock.
                     val sdk = invokeAndWaitIfNeeded {
                         runWriteAction {
                             findOrCreateSdk(oldToolchainHomeDirectory)

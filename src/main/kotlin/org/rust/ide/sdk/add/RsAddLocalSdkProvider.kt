@@ -8,5 +8,5 @@ package org.rust.ide.sdk.add
 import com.intellij.openapi.projectRoots.Sdk
 
 object RsAddLocalSdkProvider : RsAddSdkProvider {
-    override fun createView(existingSdks: List<Sdk>): RsAddSdkPanel = RsAddLocalSdkPanel(existingSdks)
+    override fun createPanel(existingSdks: List<Sdk>): RsAddSdkPanel = RsAddLocalSdkPanel(existingSdks)
 }

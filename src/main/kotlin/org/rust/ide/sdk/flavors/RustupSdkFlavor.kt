@@ -8,7 +8,6 @@ package org.rust.ide.sdk.flavors
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.io.isDirectory
 import org.rust.cargo.toolchain.tools.Rustup
-import org.rust.ide.sdk.flavors.RsSdkFlavor.Companion.hasExecutable
 import org.rust.stdext.toPath
 import java.nio.file.Path
 

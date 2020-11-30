@@ -18,6 +18,8 @@ import org.rust.ide.sdk.RsSdkPathChoosingComboBox
 import org.rust.ide.sdk.RsSdkPathChoosingComboBox.Companion.addToolchainsAsync
 import org.rust.ide.sdk.RsSdkPathChoosingComboBox.Companion.validateSdkComboBox
 import org.rust.ide.sdk.RsSdkUtils.detectRustSdks
+import org.rust.ide.sdk.flavors.RsSdkFlavor
+import org.rust.stdext.toPath
 import java.awt.BorderLayout
 import java.awt.event.ItemEvent
 import javax.swing.Icon
@@ -26,7 +28,12 @@ class RsAddLocalSdkPanel(private val existingSdks: List<Sdk>) : RsAddSdkPanel() 
     override val panelName: String = "Local toolchain"
     override val icon: Icon = RsIcons.RUST
 
-    private val sdkPathComboBox: RsSdkPathChoosingComboBox = RsSdkPathChoosingComboBox()
+    private val sdkPathComboBox: RsSdkPathChoosingComboBox = RsSdkPathChoosingComboBox { path ->
+        val flavor = RsSdkFlavor.getFlavor(path?.toPath())
+        if (flavor?.isRemote() == true) {
+            throw Exception("The selected directory is not a valid home for local Rust toolchain")
+        }
+    }
     private val homePath: String? get() = sdkPathComboBox.selectedSdk?.homePath
 
     private val sdkAdditionalDataPanel: RsSdkAdditionalDataPanel = RsSdkAdditionalDataPanel()
@@ -45,7 +52,10 @@ class RsAddLocalSdkPanel(private val existingSdks: List<Sdk>) : RsAddSdkPanel() 
                 sdkAdditionalDataPanel.notifySdkHomeChanged(homePath)
             }
         }
-        addToolchainsAsync(sdkPathComboBox) { detectRustSdks(existingSdks) }
+
+        addToolchainsAsync(sdkPathComboBox) {
+            detectRustSdks(existingSdks) { !it.isRemote() }
+        }
     }
 
     override fun getOrCreateSdk(): Sdk? =

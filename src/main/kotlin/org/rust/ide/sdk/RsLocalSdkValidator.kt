@@ -8,10 +8,10 @@ package org.rust.ide.sdk
 import com.intellij.openapi.projectRoots.Sdk
 import org.rust.ide.sdk.remote.RsRemoteSdkUtils.isRemoteSdk
 
-class RsLocalSdkValidator : RsSdkValidator {
+object RsLocalSdkValidator : RsSdkValidator {
     override fun isInvalid(sdk: Sdk): Boolean {
         if (isRemoteSdk(sdk)) return false
-        val toolchain = sdk.homeDirectory
-        return toolchain == null || !toolchain.exists()
+        val homeDirectory = sdk.homeDirectory
+        return homeDirectory == null || !homeDirectory.exists()
     }
 }

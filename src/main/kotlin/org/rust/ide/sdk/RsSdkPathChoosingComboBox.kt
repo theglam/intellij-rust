@@ -8,7 +8,6 @@ import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.ui.ComboBoxWithWidePopup
 import com.intellij.openapi.ui.ComponentWithBrowseButton
 import com.intellij.openapi.ui.ValidationInfo
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.ComboboxSpeedSearch
 import com.intellij.ui.components.fields.ExtendableTextComponent
@@ -23,8 +22,8 @@ import javax.swing.plaf.basic.BasicComboBoxEditor
  *
  * To fill this box in async mode use [addToolchainsAsync]
  */
-class RsSdkPathChoosingComboBox(sdks: List<Sdk> = emptyList(), suggestedFile: VirtualFile? = null) :
-    ComponentWithBrowseButton<ComboBoxWithWidePopup<Sdk>>(ComboBoxWithWidePopup(sdks.toTypedArray()), null) {
+class RsSdkPathChoosingComboBox(validateSdkHome: (String?) -> Unit) :
+    ComponentWithBrowseButton<ComboBoxWithWidePopup<Sdk>>(ComboBoxWithWidePopup(), null) {
     private val busyIconExtension: ExtendableTextComponent.Extension =
         ExtendableTextComponent.Extension { AnimatedIcon.Default.INSTANCE }
 
@@ -49,10 +48,11 @@ class RsSdkPathChoosingComboBox(sdks: List<Sdk> = emptyList(), suggestedFile: Vi
             val descriptor = sdkType.homeChooserDescriptor.apply {
                 isForcedToUseIdeaFileChooser = true
             }
-            FileChooser.chooseFiles(descriptor, null, suggestedFile) {
+            FileChooser.chooseFiles(descriptor, null, null) {
                 val virtualFile = it.firstOrNull() ?: return@chooseFiles
                 val path = PathUtil.toSystemDependentName(virtualFile.path)
                 if (!sdkType.isValidSdkHome(path)) return@chooseFiles
+                validateSdkHome(path)
                 childComponent.selectedItem = items.find { sdk -> sdk.homePath == path }
                     ?: RsDetectedSdk(path).apply { childComponent.insertItemAt(this, 0) }
             }

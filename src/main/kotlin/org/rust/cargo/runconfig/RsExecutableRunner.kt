@@ -24,6 +24,7 @@ import org.rust.cargo.runconfig.command.CargoCommandConfiguration
 import org.rust.cargo.toolchain.tools.Cargo.Companion.cargoCommonPatch
 import org.rust.cargo.util.CargoArgsParser.Companion.parseArgs
 import org.rust.openapiext.computeWithCancelableProgress
+import org.rust.stdext.toPath
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
@@ -79,7 +80,8 @@ abstract class RsExecutableRunner(
             runCargoCommand.backtraceMode,
             runCargoCommand.environmentVariables,
             executableArguments,
-            runCargoCommand.emulateTerminal
+            runCargoCommand.emulateTerminal,
+            patchToRemote = false
         )
         return showRunContent(state, environment, runExecutable)
     }

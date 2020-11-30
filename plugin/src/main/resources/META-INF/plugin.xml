@@ -28,6 +28,9 @@
     <depends optional="true" config-file="coverage-only.xml">com.intellij.modules.coverage</depends>
     <depends optional="true" config-file="grazie-only.xml">tanvd.grazi</depends>
 
+    <xi:include href="/META-INF/wsl-only.xml" xpointer="xpointer(/idea-plugin/*)"/>
+<!--    <depends optional="true" config-file="wsl-only.xml">org.jetbrains.plugins.wsl</depends>-->
+
     <extensions defaultExtensionNs="com.intellij">
         <!-- although Rust module type is only created by IDEA, we need it in other IDEs as well
              to be able to open a project created in IDEA without errors -->

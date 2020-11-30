@@ -39,6 +39,7 @@ import org.rust.cargo.toolchain.tools.Cargo.Companion.cargoCommonPatch
 import org.rust.cargo.toolchain.tools.cargo
 import org.rust.cargo.util.CargoArgsParser.Companion.parseArgs
 import org.rust.openapiext.saveAllDocuments
+import org.rust.stdext.toPath
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -81,7 +82,8 @@ abstract class RsAsyncRunner(
                     backtraceMode,
                     environmentVariables,
                     executableArguments,
-                    emulateTerminal
+                    emulateTerminal,
+                    patchToRemote = false
                 )
             }
         }

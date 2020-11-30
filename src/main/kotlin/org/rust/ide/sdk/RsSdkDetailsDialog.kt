@@ -28,7 +28,7 @@ import org.rust.cargo.project.settings.rustSettings
 import org.rust.cargo.toolchain.RsToolchainProvider
 import org.rust.cargo.toolchain.tools.rustc
 import org.rust.ide.sdk.add.RsAddSdkDialog
-import org.rust.ide.sdk.edit.RsEditLocalSdkDialog
+import org.rust.ide.sdk.edit.RsEditSdkProvider
 import org.rust.ide.sdk.remote.RsCredentialsContribution
 import org.rust.ide.sdk.remote.RsRemoteSdkAdditionalData
 import org.rust.ide.sdk.remote.RsRemoteSdkUtils.isRemoteSdk
@@ -197,13 +197,13 @@ class RsSdkDetailsDialog(
             }
         }
 
-        val dialog = RsEditLocalSdkDialog(effectiveProject, modificator) {
+        val dialog = RsEditSdkProvider.createDialog(effectiveProject, modificator) {
             if (isDuplicateSdkName(it, currentSdk)) {
                 "Please specify a unique name for the toolchain"
             } else {
                 null
             }
-        }
+        } ?: return
 
         if (dialog.showAndGet()) {
             if (modificator.name != dialog.sdkName

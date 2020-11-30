@@ -64,19 +64,20 @@ class Rustup(toolchain: RsToolchain) : RsTool(NAME, toolchain) {
         }
 
     private fun needInstallComponent(componentName: String): Boolean {
-        val isInstalled = listComponents()
+        val listComponents = listComponents()
+        val isInstalled = listComponents
             .find { (name, _) -> name.startsWith(componentName) }
             ?.isInstalled
-            ?: return false
+            ?: return true
 
         return !isInstalled
     }
 
     fun listComponents(): List<Component> =
-        createBaseCommandLine("component", "list", "--toolchain", toolchainName)
+        createBaseCommandLine("component", "list", "--installed", "--toolchain", toolchainName)
             .execute()
             ?.stdoutLines
-            ?.map { Component.from(it) }
+            ?.map { Component(it.trim(), true) } // TODO
             .orEmpty()
 
     data class Component(val name: String, val isInstalled: Boolean) {

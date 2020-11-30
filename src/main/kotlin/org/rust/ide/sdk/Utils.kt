@@ -15,7 +15,6 @@ import org.rust.cargo.toolchain.RsToolchain
 import org.rust.cargo.toolchain.RsToolchainProvider
 import org.rust.cargo.toolchain.tools.rustup
 import org.rust.ide.sdk.flavors.RsSdkFlavor
-import org.rust.ide.sdk.flavors.RustupSdkFlavor
 import org.rust.ide.sdk.flavors.suggestHomePaths
 import org.rust.openapiext.computeWithCancelableProgress
 import org.rust.stdext.toPath
@@ -49,11 +48,13 @@ object RsSdkUtils {
 
     fun findSdkByKey(key: String): Sdk? = getAllRustSdks().find { it.key == key }
 
-    fun detectRustSdks(existingSdks: List<Sdk>): List<RsDetectedSdk> {
-        val existingPaths = existingSdks
-            .mapNotNull { it.homePath?.toPath() }
-            .filterNot { RustupSdkFlavor.isValidSdkPath(it) }
+    fun detectRustSdks(
+        existingSdks: List<Sdk>,
+        flavorFilter: (RsSdkFlavor) -> Boolean = { true }
+    ): List<RsDetectedSdk> {
+        val existingPaths = existingSdks.mapNotNull { it.homePath?.toPath() }
         return RsSdkFlavor.getApplicableFlavors().asSequence()
+            .filter(flavorFilter)
             .flatMap { it.suggestHomePaths().asSequence() }
             .map { it.toAbsolutePath() }
             .distinct()
@@ -74,6 +75,7 @@ object RsSdkUtils {
         return SdkConfigurationUtil.createAndAddSDK(homePath, RsSdkType.getInstance())
     }
 
+    // TODO: provide remote SDK additional data
     fun createRustSdkAdditionalData(homePath: String): RsSdkAdditionalData? {
         val data = RsSdkAdditionalData()
         val toolchain = RsToolchainProvider.getToolchain(homePath, null) ?: return null

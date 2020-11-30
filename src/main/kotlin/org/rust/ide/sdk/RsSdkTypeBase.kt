@@ -70,6 +70,7 @@ abstract class RsSdkTypeBase : SdkType(RUST_SDK_ID_NAME) {
 
         val newAdditionalData = createRustSdkAdditionalData(homePath) ?: return false
         val suggestedName = buildString {
+            // TODO
             append(suggestSdkName(sdk.name, homePath))
             newAdditionalData.toolchainName?.let { append(" ($it)") }
         }

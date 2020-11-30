@@ -12,7 +12,7 @@ interface RsAddSdkProvider {
     /**
      * Returns [RsAddSdkPanel] if applicable.
      */
-    fun createView(existingSdks: List<Sdk>): RsAddSdkPanel?
+    fun createPanel(existingSdks: List<Sdk>): RsAddSdkPanel?
 
     companion object {
         @JvmField

@@ -139,7 +139,7 @@ open class Cargo(toolchain: RsToolchain, useWrapper: Boolean = false)
             .dropWhile { it != '{' }
         val project = try {
             Gson().fromJson(json, CargoMetadata.Project::class.java)
-                .apply { convertPaths(toolchain::toLocalPath) }
+                .convertPaths(toolchain::toLocalPath)
         } catch (e: JsonSyntaxException) {
             throw ExecutionException(e)
         }
@@ -347,7 +347,7 @@ open class Cargo(toolchain: RsToolchain, useWrapper: Boolean = false)
                 environmentVariables,
                 parameters,
                 emulateTerminal,
-                http
+                http = http
             ).withEnvironment("RUSTC", rustcExecutable)
         }
 

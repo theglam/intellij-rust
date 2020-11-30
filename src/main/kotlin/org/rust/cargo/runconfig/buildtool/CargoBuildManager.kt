@@ -10,7 +10,6 @@ import com.intellij.build.BuildViewManager
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.ExecutorRegistry
 import com.intellij.execution.RunManager
-import com.intellij.execution.configuration.EnvironmentVariablesData
 import com.intellij.execution.executors.DefaultRunExecutor
 import com.intellij.execution.impl.RunManagerImpl
 import com.intellij.execution.impl.RunnerAndConfigurationSettingsImpl
@@ -34,7 +33,6 @@ import com.intellij.openapiext.isHeadlessEnvironment
 import com.intellij.openapiext.isUnitTestMode
 import com.intellij.ui.SystemNotifications
 import com.intellij.ui.content.MessageView
-import com.intellij.util.EnvironmentUtil
 import com.intellij.util.concurrency.FutureResult
 import com.intellij.util.execution.ParametersListUtil
 import com.intellij.util.text.SemVer
@@ -282,12 +280,7 @@ object CargoBuildManager {
         additionalArguments.remove("-q")
         additionalArguments.remove("--quiet")
         addFormatJsonOption(additionalArguments, "--message-format")
-        val environmentVariables = EnvironmentVariablesData.create(
-            EnvironmentUtil.getEnvironmentMap() +
-                commandLine.environmentVariables.envs - "CI" + ("TERM" to "ansi"),
-            false
-        )
-        commandLine.copy(additionalArguments = additionalArguments, environmentVariables = environmentVariables)
+        commandLine.copy(additionalArguments = additionalArguments)
     }
 
     @TestOnly

@@ -5,6 +5,7 @@
 
 package org.rust.ide.sdk.remote
 
+import com.intellij.execution.wsl.WSLDistribution
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.util.Ref
 import com.intellij.remote.ext.LanguageCaseCollector
@@ -21,12 +22,13 @@ object RsRemoteSdkUtils {
      * @return whether provided Rust toolchain path corresponds to Rust SDK
      */
     fun isCustomSdkHomePath(homePath: String): Boolean =
-        CUSTOM_RUST_SDK_HOME_PATH_PATTERN.matches(homePath)
+        homePath.startsWith(WSLDistribution.UNC_PREFIX)
+            || CUSTOM_RUST_SDK_HOME_PATH_PATTERN.matches(homePath)
 
     fun isIncompleteRemote(sdk: Sdk): Boolean {
         if (!isRemoteSdk(sdk)) return false
         val additionalData = sdk.sdkAdditionalData as? RsRemoteSdkAdditionalData ?: return true
-        return additionalData.isValid
+        return !additionalData.isValid
     }
 
     fun hasInvalidRemoteCredentials(sdk: Sdk): Boolean {

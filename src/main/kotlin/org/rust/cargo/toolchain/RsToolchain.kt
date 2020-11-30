@@ -37,7 +37,7 @@ interface RsToolchainProvider {
 }
 
 abstract class RsToolchain(val location: Path, val name: String?) {
-    val presentableLocation: String = pathToExecutable(Cargo.NAME).toString()
+    val presentableLocation: String get() = pathToExecutable(Cargo.NAME).toString()
 
     abstract val fileSeparator: String
 
@@ -59,13 +59,13 @@ abstract class RsToolchain(val location: Path, val name: String?) {
     protected abstract fun getExecutableName(toolName: String): String
 
     // for executables from toolchain
-    fun pathToExecutable(toolName: String): Path {
+    open fun pathToExecutable(toolName: String): Path {
         val exeName = getExecutableName(toolName)
         return location.resolve(exeName).toAbsolutePath()
     }
 
     // for executables installed using `cargo install`
-    fun pathToCargoExecutable(toolName: String): Path {
+    open fun pathToCargoExecutable(toolName: String): Path {
         // Binaries installed by `cargo install` (e.g. Grcov, Evcxr) are placed in ~/.cargo/bin by default:
         // https://doc.rust-lang.org/cargo/commands/cargo-install.html
         // But toolchain root may be different (e.g. on Arch Linux it is usually /usr/bin)
@@ -77,9 +77,9 @@ abstract class RsToolchain(val location: Path, val name: String?) {
         return cargoBinPath.resolve(exeName).toAbsolutePath()
     }
 
-    fun hasExecutable(exec: String): Boolean = pathToExecutable(exec).isExecutable()
+    open fun hasExecutable(exec: String): Boolean = pathToExecutable(exec).isExecutable()
 
-    fun hasCargoExecutable(exec: String): Boolean = pathToCargoExecutable(exec).isExecutable()
+    open fun hasCargoExecutable(exec: String): Boolean = pathToCargoExecutable(exec).isExecutable()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -105,6 +105,7 @@ abstract class RsToolchain(val location: Path, val name: String?) {
         environmentVariables: EnvironmentVariablesData,
         parameters: List<String>,
         emulateTerminal: Boolean,
+        patchToRemote: Boolean = true,
         http: HttpConfigurable = HttpConfigurable.getInstance()
     ): GeneralCommandLine {
         var commandLine = GeneralCommandLine(executable)
@@ -122,13 +123,16 @@ abstract class RsToolchain(val location: Path, val name: String?) {
         }
 
         environmentVariables.configureCommandLine(commandLine, true)
-        commandLine = patchCommandLine(commandLine)
 
         if (emulateTerminal) {
             if (!SystemInfo.isWindows) {
                 commandLine.environment["TERM"] = "xterm-256color"
             }
             commandLine = PtyCommandLine(commandLine).withInitialColumns(PtyCommandLine.MAX_COLUMNS)
+        }
+
+        if (patchToRemote) {
+            commandLine = patchCommandLine(commandLine)
         }
 
         return commandLine

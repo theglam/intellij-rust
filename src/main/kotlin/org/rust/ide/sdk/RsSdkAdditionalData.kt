@@ -50,6 +50,12 @@ open class RsSdkAdditionalData(
         return result
     }
 
+    fun copyTo(other: RsSdkAdditionalData) {
+        other.sdkKey = sdkKey
+        other.toolchainName = toolchainName
+        other.explicitPathToStdlib = explicitPathToStdlib
+    }
+
     fun interface Listener {
         fun sdkAdditionalDataChanged(sdk: Sdk)
     }

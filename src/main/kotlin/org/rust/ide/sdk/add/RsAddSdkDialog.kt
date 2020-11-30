@@ -41,7 +41,7 @@ class RsAddSdkDialog private constructor(
         val mainPanel = JPanel(JBCardLayout())
         val panels = RsAddSdkProvider.EP_NAME.extensionList
             .mapNotNull {
-                it.safeCreateView(existingSdks)
+                it.safeCreatePanel(existingSdks)
                     .registerIfDisposable()
             }
         mainPanel.add(SPLITTER_COMPONENT_CARD_PANE, createCardSplitter(panels))
@@ -125,8 +125,8 @@ class RsAddSdkDialog private constructor(
             sdkAddedCallback(sdk)
         }
 
-        private fun RsAddSdkProvider.safeCreateView(existingSdks: List<Sdk>): RsAddSdkPanel? = try {
-            createView(existingSdks)
+        private fun RsAddSdkProvider.safeCreatePanel(existingSdks: List<Sdk>): RsAddSdkPanel? = try {
+            createPanel(existingSdks)
         } catch (e: NoClassDefFoundError) {
             LOG.info(e)
             null
