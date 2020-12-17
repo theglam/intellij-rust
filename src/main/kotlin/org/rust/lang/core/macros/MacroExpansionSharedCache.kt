@@ -20,9 +20,10 @@ import com.intellij.util.io.*
 import org.rust.lang.RsLanguage
 import org.rust.lang.core.macros.MacroExpansionSharedCache.Companion.CACHE_ENABLED
 import org.rust.lang.core.parser.RustParserDefinition
+import org.rust.lang.core.psi.RsFunction
 import org.rust.lang.core.psi.RsMacro
 import org.rust.lang.core.psi.RsMacroCall
-import org.rust.lang.core.psi.ext.bodyHash
+import org.rust.lang.core.psi.ext.*
 import org.rust.lang.core.stubs.RsFileStub
 import org.rust.stdext.HashCode
 import org.rust.stdext.readVarInt
@@ -131,15 +132,15 @@ class MacroExpansionSharedCache : Disposable {
         MACRO_LOG.warn(e)
     }
 
-    fun cachedExpand(expander: MacroExpander, def: RsMacroDataWithHash, call: RsMacroCall): ExpansionResult? {
+    fun <T: RsMacroData> cachedExpand(expander: MacroExpander<T>, def: RsMacroDataWithHash<T>, call: RsMacroCall): ExpansionResult? {
         val callData = RsMacroCallData(call)
         val hash = HashCode.mix(def.bodyHash ?: return null, call.bodyHash ?: return null)
         return cachedExpand(expander, def.data, callData, hash)
     }
 
-    private fun cachedExpand(
-        expander: MacroExpander,
-        def: RsMacroData,
+    private fun <T: RsMacroData> cachedExpand(
+        expander: MacroExpander<T>,
+        def: T,
         call: RsMacroCallData,
         /** mixed hash of [def] and [call], passed as optimization */
         hash: HashCode
@@ -161,10 +162,10 @@ class MacroExpansionSharedCache : Disposable {
         }
     }
 
-    fun createExpansionStub(
+    fun <T: RsMacroData> createExpansionStub(
         project: Project,
-        expander: MacroExpander,
-        def: RsMacroDataWithHash,
+        expander: MacroExpander<T>,
+        def: RsMacroDataWithHash<T>,
         call: RsMacroCallDataWithHash
     ): Pair<RsFileStub, ExpansionResult>? {
         val hash = HashCode.mix(def.bodyHash ?: return null, call.bodyHash ?: return null)
@@ -198,8 +199,21 @@ class MacroExpansionSharedCache : Disposable {
     }
 }
 
-class RsMacroDataWithHash(val data: RsMacroData, val bodyHash: HashCode?) {
-    constructor(def: RsMacro) : this(RsMacroData(def), def.bodyHash)
+class RsMacroDataWithHash<T: RsMacroData>(val data: T, val bodyHash: HashCode?) {
+    companion object {
+        fun fromDeclOrProcMacroPsi(def: RsNamedElement): RsMacroDataWithHash<RsMacroData>? {
+            return when {
+                def is RsMacro -> RsMacroDataWithHash(RsDeclMacroData(def), def.bodyHash)
+                def is RsFunction && def.isProcMacroDef -> {
+                    val name = def.procMacroName ?: return null
+                    val procMacro = def.containingCrate?.cargoTarget?.pkg?.procMacroArtifact ?: return null
+                    val hash = HashCode.mix(procMacro.hash, HashCode.compute(name))
+                    RsMacroDataWithHash(RsProcMacroData(name, procMacro), hash)
+                }
+                else -> null
+            }
+        }
+    }
 }
 
 class RsMacroCallDataWithHash(val data: RsMacroCallData, val bodyHash: HashCode?)
@@ -253,7 +267,7 @@ private class PersistentCacheData(
                     HashCodeKeyDescriptor,
                     ExpansionResultExternalizer,
                     1 * 1024 * 1024,
-                    MacroExpander.EXPANDER_VERSION + RustParserDefinition.PARSER_VERSION + 1
+                    DeclMacroExpander.EXPANDER_VERSION + RustParserDefinition.PARSER_VERSION + 1
                 )
                 cleaners += expansions::close
 
@@ -262,7 +276,7 @@ private class PersistentCacheData(
                     HashCodeKeyDescriptor,
                     newSerializedStubTreeDataExternalizer(localSerMgr, stubExternalizer),
                     1 * 1024 * 1024,
-                    MacroExpander.EXPANDER_VERSION + RsFileStub.Type.stubVersion
+                    DeclMacroExpander.EXPANDER_VERSION + RsFileStub.Type.stubVersion
                 )
                 cleaners += stubs::close
 

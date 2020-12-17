@@ -231,7 +231,7 @@ class ExpandedMacroStorage(val project: Project) {
 
         fun saveStorage(storage: ExpandedMacroStorage, data: DataOutputStream) {
             data.writeInt(STORAGE_VERSION)
-            data.writeInt(MacroExpander.EXPANDER_VERSION)
+            data.writeInt(DeclMacroExpander.EXPANDER_VERSION)
             data.writeInt(RsFileStub.Type.stubVersion)
             data.writeInt(RANGE_MAP_ATTRIBUTE_VERSION)
 
@@ -260,7 +260,7 @@ class SerializedExpandedMacroStorage private constructor(
         @Throws(IOException::class)
         fun load(data: DataInputStream): SerializedExpandedMacroStorage? {
             if (data.readInt() != STORAGE_VERSION) return null
-            if (data.readInt() != MacroExpander.EXPANDER_VERSION) return null
+            if (data.readInt() != DeclMacroExpander.EXPANDER_VERSION) return null
             if (data.readInt() != RsFileStub.Type.stubVersion) return null
             if (data.readInt() != RANGE_MAP_ATTRIBUTE_VERSION) return null
 
@@ -835,7 +835,7 @@ interface ExpandedMacroInfo {
     val expansionFile: VirtualFile?
     val expansionFileHash: Long
     fun getMacroCall(): RsMacroCall?
-    fun isUpToDate(call: RsMacroCall, def: RsMacroDataWithHash?): Boolean
+    fun isUpToDate(call: RsMacroCall, def: RsMacroDataWithHash<*>?): Boolean
     fun getExpansion(): MacroExpansion?
 }
 
@@ -854,7 +854,7 @@ class ExpandedMacroInfoImpl(
     override fun getMacroCall(): RsMacroCall? =
         sourceFile.getCallForInfo(this)
 
-    override fun isUpToDate(call: RsMacroCall, def: RsMacroDataWithHash?): Boolean =
+    override fun isUpToDate(call: RsMacroCall, def: RsMacroDataWithHash<*>?): Boolean =
         callHash == call.bodyHash && def?.bodyHash == defHash
 
     override fun getExpansion(): MacroExpansion? {

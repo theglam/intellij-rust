@@ -119,8 +119,8 @@ fun getExpansionFromExpandedFile(context: MacroExpansionContext, expandedFile: R
     }
 }
 
-fun MacroExpander.expandMacro(
-    def: RsMacroData,
+fun DeclMacroExpander.expandMacro(
+    def: RsDeclMacroData,
     call: RsMacroCall,
     factory: RsPsiFactory,
     storeRangeMap: Boolean

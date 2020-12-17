@@ -19,6 +19,7 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import com.intellij.psi.tree.TokenSet
 import com.intellij.util.SmartList
+import org.rust.cargo.project.workspace.CargoWorkspaceData
 import org.rust.lang.core.macros.MacroMatchingError.*
 import org.rust.lang.core.parser.RustParserUtil.collapsedTokenType
 import org.rust.lang.core.parser.createAdaptedRustPsiBuilder
@@ -125,20 +126,41 @@ private class NestingState(
     var atTheEnd: Boolean = false
 )
 
-class RsMacroData(val macroBody: Lazy<RsMacroBody?>) {
+sealed class RsMacroData
+
+class RsDeclMacroData(val macroBody: Lazy<RsMacroBody?>): RsMacroData() {
     constructor(def: RsMacro) : this(lazy(LazyThreadSafetyMode.PUBLICATION) { def.macroBodyStubbed })
 }
+
+data class RsProcMacroData(val name: String, val artifact: CargoWorkspaceData.ProcMacroArtifact): RsMacroData()
 
 class RsMacroCallData(val macroBody: String?) {
     constructor(call: RsMacroCall) : this(call.macroBody)
 }
 
-class MacroExpander(val project: Project) {
-    fun expandMacroAsText(def: RsMacroData, call: RsMacroCallData): Pair<CharSequence, RangeMap>? {
+abstract class MacroExpander<in T: RsMacroData> {
+    abstract fun expandMacroAsText(def: T, call: RsMacroCallData): Pair<CharSequence, RangeMap>?
+}
+
+class BangMacroExpander(
+    private val decl: DeclMacroExpander,
+    private val proc: ProcMacroExpander
+) : MacroExpander<RsMacroData>() {
+    override fun expandMacroAsText(def: RsMacroData, call: RsMacroCallData): Pair<CharSequence, RangeMap>? {
+        return when (def) {
+            is RsDeclMacroData -> decl.expandMacroAsText(def, call)
+            is RsProcMacroData -> proc.expandMacroAsText(def, call)
+        }
+    }
+
+}
+
+class DeclMacroExpander(val project: Project): MacroExpander<RsDeclMacroData>() {
+    override fun expandMacroAsText(def: RsDeclMacroData, call: RsMacroCallData): Pair<CharSequence, RangeMap>? {
         return expandMacroAsTextWithErr(def, call).ok()
     }
 
-    fun expandMacroAsTextWithErr(def: RsMacroData, call: RsMacroCallData): RsResult<Pair<CharSequence, RangeMap>, MacroExpansionError> {
+    fun expandMacroAsTextWithErr(def: RsDeclMacroData, call: RsMacroCallData): RsResult<Pair<CharSequence, RangeMap>, MacroExpansionError> {
         val (case, subst, loweringRanges) = findMatchingPattern(def, call).unwrapOrElse { return Err(it) }
         val macroExpansion = case.macroExpansion?.macroExpansionContents ?: return Err(MacroExpansionError.DefSyntax)
 
@@ -156,7 +178,7 @@ class MacroExpander(val project: Project) {
     }
 
     private fun findMatchingPattern(
-        def: RsMacroData,
+        def: RsDeclMacroData,
         call: RsMacroCallData
     ): RsResult<MatchedPattern, MacroExpansionError> {
         val macroCallBodyText = call.macroBody ?: return Err(MacroExpansionError.DefSyntax)
@@ -216,7 +238,7 @@ class MacroExpander(val project: Project) {
             }
         }
 
-        return this@MacroExpander.project.createAdaptedRustPsiBuilder(sb) to RangeMap.from(ranges)
+        return this@DeclMacroExpander.project.createAdaptedRustPsiBuilder(sb) to RangeMap.from(ranges)
     }
 
     private fun PsiBuilder.hasDocComments(): Boolean {

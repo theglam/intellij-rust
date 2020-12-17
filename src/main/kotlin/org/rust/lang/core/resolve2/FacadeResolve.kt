@@ -180,10 +180,13 @@ fun <T> RsMacroCall.resolveToMacroUsingNewResolveAndThen(
  *   which is prevented by returning null from macro expansion,
  *   therefore result of [expandedItemsCached] is incomplete (and cached)
  */
-fun RsMacroCall.resolveToMacroWithoutPsi(): RsMacroDataWithHash? =
+fun RsMacroCall.resolveToMacroWithoutPsi(): RsMacroDataWithHash<*>? =
     resolveToMacroAndThen(
-        withNewResolve = { def, _ -> RsMacroDataWithHash(RsMacroData(def.body), def.bodyHash) },
-        withoutNewResolve = { resolveToMacro()?.let { RsMacroDataWithHash(it) } }
+        withNewResolve = { def, _ -> RsMacroDataWithHash(RsDeclMacroData(def.body), def.bodyHash) },
+        withoutNewResolve = {
+            val psi = path.reference?.resolve() as? RsNamedElement
+            psi?.let { RsMacroDataWithHash.fromDeclOrProcMacroPsi(it) }
+        }
     )
 
 /** See [resolveToMacroWithoutPsi] */
