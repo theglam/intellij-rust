@@ -2,13 +2,23 @@
     <depends>com.jetbrains.rider-cpp</depends>
     <xi:include href="/META-INF/core-debugger-only.xml" xpointer="xpointer(/idea-plugin/*)"/>
 
+<!--    <extensions defaultExtensionNs="com.intellij">-->
+<!--        <programRunner implementation="org.rust.rider.debugger.runconfig.RsRiderDebugRunner"/>-->
+<!--        <programRunner implementation="org.rust.rider.debugger.runconfig.legacy.RsRiderDebugRunnerLegacy"/>-->
+<!--    </extensions>-->
+
+<!--    <extensions defaultExtensionNs="org.rust">-->
+<!--        <debugger.driverConfigurationProvider-->
+<!--            implementation="org.rust.rider.debugger.RsRiderDebuggerDriverConfigurationProvider"/>-->
+<!--    </extensions>-->
+
     <extensions defaultExtensionNs="com.intellij">
-        <programRunner implementation="org.rust.rider.debugger.runconfig.RsRiderDebugRunner"/>
-        <programRunner implementation="org.rust.rider.debugger.runconfig.legacy.RsRiderDebugRunnerLegacy"/>
+        <programRunner implementation="org.rust.debugger.runconfig.RsDebugRunner"/>
+        <programRunner implementation="org.rust.debugger.runconfig.legacy.RsDebugRunnerLegacy"/>
     </extensions>
 
     <extensions defaultExtensionNs="org.rust">
         <debugger.driverConfigurationProvider
-            implementation="org.rust.rider.debugger.RsRiderDebuggerDriverConfigurationProvider"/>
+            implementation="org.rust.debugger.RsDebuggerDriverConfigurationProviderImpl"/>
     </extensions>
 </idea-plugin>
