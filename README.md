@@ -1,4 +1,4 @@
-# Rust plugin for the IntelliJ Platform
+# Rust plugin for the IntelliJ Platform Test
 
 [![official JetBrains project](https://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Join the chat at https://gitter.im/intellij-rust/intellij-rust][gitter-chat-svg]][gitter-chat]
